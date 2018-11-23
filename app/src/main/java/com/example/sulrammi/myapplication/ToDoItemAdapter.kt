@@ -1,59 +1,40 @@
 package com.example.sulrammi.myapplication
 
-import android.content.Context
-import android.util.Log
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
 import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.TextView
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.firebase.ui.database.FirebaseRecyclerOptions
 
 
+class ToDoItemAdapter(options: FirebaseRecyclerOptions<ToDoItem>, listener: ItemRowListener) :
+    FirebaseRecyclerAdapter<ToDoItem, ToDoItemAdapter.ListRowHolder>(options) {
+    private var rowListener: ItemRowListener = listener
 
-class ToDoItemAdapter(context: Context, toDoItemList: MutableList<MainActivity.ToDoItem>) : BaseAdapter(){
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListRowHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.row_items, parent, false)
+        return ListRowHolder(view)
+    }
 
-    private var rowListener: ItemRowListener = context as ItemRowListener
-    private val mInflater: LayoutInflater = LayoutInflater.from(context)
-    private var itemList = toDoItemList
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val objectId: String = itemList.get(position).objectId as String
-        val itemText: String = itemList.get(position).itemText as String
-        val done: Boolean = itemList.get(position).done as Boolean
-        val view: View
-        val vh: ListRowHolder
-        if (convertView == null) {
-            view = mInflater.inflate(R.layout.row_items, parent, false)
-            vh = ListRowHolder(view)
-            view.tag = vh
-        } else {
-            view = convertView
-            vh = view.tag as ListRowHolder
+    override fun onBindViewHolder(holder: ListRowHolder, position: Int, model: ToDoItem) {
+        holder.label.text = model.itemText
+        holder.isDone.isChecked = model.done
+        holder.isDone.setOnClickListener {
+            rowListener.modifyItemState(model.objectId, !model.done)
         }
-        vh.label.text = itemText
-        vh.isDone.isChecked = done
-        vh.isDone.setOnClickListener {
-            rowListener.modifyItemState(objectId, !done) }
-        vh.ibDeleteObject.setOnClickListener {
-            rowListener.onItemDelete(objectId) }
+        holder.ibDeleteObject.setOnClickListener {
+            rowListener.onItemDelete(model.objectId)
+        }
+    }
 
-        return view
-    }
-    override fun getItem(index: Int): Any {
-        return itemList.get(index)
-    }
-    override fun getItemId(index: Int): Long {
-        return index.toLong()
-    }
-    override fun getCount(): Int {
-        return itemList.size
-    }
-    private class ListRowHolder(row: View?) {
-        val label: TextView = row!!.findViewById<TextView>(R.id.tv_item_text) as TextView
-        val isDone: CheckBox = row!!.findViewById<CheckBox>(R.id.cb_item_is_done) as CheckBox
-        val ibDeleteObject: ImageButton = row!!.findViewById<ImageButton>(R.id.iv_cross) as ImageButton
+    class ListRowHolder(row: View) : RecyclerView.ViewHolder(row) {
+        val label: TextView = row.findViewById<TextView>(R.id.tv_item_text) as TextView
+        val isDone: CheckBox = row.findViewById<CheckBox>(R.id.cb_item_is_done) as CheckBox
+        val ibDeleteObject: ImageButton = row.findViewById<ImageButton>(R.id.iv_cross) as ImageButton
     }
 }
 
