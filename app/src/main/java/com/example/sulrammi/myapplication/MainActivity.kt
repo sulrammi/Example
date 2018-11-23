@@ -1,23 +1,12 @@
 package com.example.sulrammi.myapplication
-import android.content.Context
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.*
+import android.widget.EditText
+import android.widget.Toast
 import com.google.firebase.database.*
-import android.widget.CheckBox
-import android.widget.ImageButton
-import android.widget.TextView
-import android.widget.BaseAdapter
 import kotlinx.android.synthetic.main.activity_main.*
-
-
-
 
 
 class MainActivity : AppCompatActivity(), ItemRowListener {
@@ -31,19 +20,18 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
         val itemReference = mDatabase.child(Constants.FIREBASE_ITEM).child(itemObjectId)
         //deletion can be done via removeValue() method
         itemReference.removeValue()
+
+        adapter.notifyDataSetChanged()
     }
 
     var toDoItemList: MutableList<ToDoItem>? = null
         lateinit var adapter: ToDoItemAdapter
-        private var listViewItems: ListView? = null
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             setContentView(R.layout.activity_main)
 
 
-            val fab = findViewById<View>(R.id.fab) as FloatingActionButton
-            listViewItems = findViewById<View>(R.id.items_list) as ListView
             fab.setOnClickListener { view ->
 
                 addNewItemDialog()
@@ -51,8 +39,8 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
             mDatabase = FirebaseDatabase.getInstance().reference
             toDoItemList = mutableListOf<ToDoItem>()
             adapter = ToDoItemAdapter(this, toDoItemList!!)
-            listViewItems!!.setAdapter(adapter)
-            mDatabase.orderByKey().addListenerForSingleValueEvent(itemListener)
+            items_list.setAdapter(adapter)
+            mDatabase.orderByKey().addValueEventListener(itemListener)
         }
 
         lateinit var mDatabase: DatabaseReference
@@ -109,6 +97,7 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
         var itemListener: ValueEventListener = object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 // Get Post object and use the values to update the UI
+                toDoItemList!!.clear()
                 addDataToList(dataSnapshot)
             }
 
